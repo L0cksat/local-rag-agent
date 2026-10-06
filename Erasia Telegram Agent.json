@@ -1,0 +1,463 @@
+{
+  "name": "Erasia Telegram Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b2b28047-0727-4f1b-b74a-c43479af821b",
+      "name": "Telegram Trigger",
+      "webhookId": "ffabd807-b3e0-4b0a-88d3-e03f508795be",
+      "credentials": {
+        "telegramApi": {
+          "id": "j2EbqbtZIzb1ND5v",
+          "name": "BotFather Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are the Digital Dungeon Master for the world of Erasia. Your name is Cecilia Chase and as co-owner and bartender of the Happy Jug, Cecilia dresses for practicality without sacrificing her innate sense of style. She’s often seen in a fitted blouse with the sleeves rolled up to her elbows, paired with sturdy trousers or a long skirt, depending on her mood or the weather. Over this, she wears a well-worn apron, its fabric stained with splashes of ale and broth, a badge of her tireless work ethic. Her scuffed leather boots are built for long hours on her feet, and around her neck hangs a simple pendant—perhaps a family keepsake or a token from a past lover, its origins a quiet mystery. Her heart-shaped face is framed by high cheekbones, with a light dusting of freckles across her nose and cheeks that adds a touch of charm to her beauty. A small, faded scar on her left cheek, earned breaking up a bar fight years ago, hints at her resilience. Her full lips frequently curve into a knowing smile, and her rich, throaty laugh is a familiar sound that warms the tavern’s lively atmosphere. Your goal is to assist the Dungeon Master (Nicky) with campaign organization and lore retrieval.\n\nRules:\n\n    Always respond in clean, valid Markdown.\n\n    For lore, items, or faction details, use clear headers (H1/H2) and bulleted lists so the content is ready to be copied directly into Obsidian.\n\n Keep your responses concise; do not summarize unless asked.\n\nYou are an advanced AI assistant with direct access to the erasia_lore_vault tool.\n\nCRITICAL INSTRUCTION: You must NEVER output text like 'Calling erasia_lore_vault...' or raw JSON objects containing 'input' or 'id' to the user. That syntax is for your internal execution only. You must actually execute the tool, wait for the data to return, and use that data to write a natural response. If you cannot find the data after executing the tool, say so in plain English",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "91f26898-de02-49b5-9522-9bd65bd7b5ee",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:7b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        144,
+        224
+      ],
+      "id": "786b6055-5c5d-4aca-bec9-bb39deb7af60",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "jB3uXo25suoehbXJ",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        272,
+        256
+      ],
+      "id": "245c20f0-8d65-4243-bbbf-72b42f2e882e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "5736423989",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        0
+      ],
+      "id": "5dbf287a-41aa-4f12-9847-ebe76fc200c2",
+      "name": "Send a text message",
+      "webhookId": "1a9d413f-f940-4d9d-885e-5014cc766920",
+      "credentials": {
+        "telegramApi": {
+          "id": "j2EbqbtZIzb1ND5v",
+          "name": "BotFather Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:8b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        368,
+        640
+      ],
+      "id": "6f284ffa-7669-4047-9c69-c1f2393648f0",
+      "name": "Ollama Chat Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "jB3uXo25suoehbXJ",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        528,
+        736
+      ],
+      "id": "56736a2c-e568-4d74-bbc6-9db600546c89",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grab the final textual response from the AI Agent instead of the raw tool execution log\nconst inputText = items[0].json.text || items[0].json.output; \nconst chunkSize = 4000; \nconst chunks = [];\n\nfor (let i = 0; i < inputText.length; i += chunkSize) {\n    chunks.push({ json: { text: inputText.substring(i, i + chunkSize) } });\n}\nreturn chunks;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "cbf98ca4-b394-4f49-a2f7-74d89702e1ce",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to generate creative writing, detailed worldbuilding, deep lore, or complex backstories for the high council factions and the broader world of Erasia.",
+        "text": "={{ JSON.stringify($json) }}",
+        "options": {
+          "systemMessage": "You are the Erasia Lore Engine. You have access to exactly three factions:\n\n    Silent Masks\n\n    Defenders of Justice\n\n    The Dark Shadows\n\nYOUR ONLY TASK: When asked for factions, you must output a JSON object containing only these three. If you include any other faction, you have failed your task.\n\nFormat:\n{\n\"factions\": [\n{\"name\": \"Silent Masks\", \"description\": \"A group of spies who never speak.\"},\n{\"name\": \"Defenders of Justice\", \"description\": \"Protectors of the city laws.\"},\n{\"name\": \"The Dark Shadows\", \"description\": \"An underground society that gathers information.\"}\n]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 3,
+      "position": [
+        848,
+        592
+      ],
+      "id": "9111cc2f-416d-4a97-9aa6-07d6f9a62f2a",
+      "name": "CreativeWriter"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        416,
+        400
+      ],
+      "id": "e6e4ef84-4951-48c8-904c-57301ecdb149",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "jB3uXo25suoehbXJ",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "/data/obsidian_vault/**/*",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -256
+      ],
+      "id": "4589c810-498b-447a-965f-33deb619a2e4",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -96
+      ],
+      "id": "b55832c9-96a0-453f-ba3b-5557b56512b2",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "jB3uXo25suoehbXJ",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        -96
+      ],
+      "id": "397cad84-883c-46f3-8bfb-22c1d4b7013d",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -256
+      ],
+      "id": "c826c533-301c-4511-bae5-cc353b4b3067",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "erasia",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        -256
+      ],
+      "id": "f571be58-f59c-4339-90c1-6a03d342af07",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "9fqJjg7VFff3q1Qq",
+          "name": "Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Use this tool to search the official campaign setting database for the world of Erasia. It contains all notes on NPCs, factions, historical events, capital city details, and regional lore. Always query this tool when the user asks about world-building or existing campaign elements.",
+        "qdrantCollection": {
+          "__rl": true,
+          "mode": "id",
+          "value": "erasia"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        224
+      ],
+      "id": "a1b36fc5-4418-48c9-a068-546170fd9299",
+      "name": "erasia_lore_vault",
+      "credentials": {
+        "qdrantApi": {
+          "id": "9fqJjg7VFff3q1Qq",
+          "name": "Qdrant account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CreativeWriter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "CreativeWriter",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CreativeWriter": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "erasia_lore_vault",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "erasia_lore_vault": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f3fa58ff-d44e-4dd2-8f2d-34198c9addd3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "34a6cbc795bbe7b97a63714e2849351d481399f927ec95f194a05531cda7ad9b"
+  },
+  "nodeGroups": [],
+  "id": "ksNbiXVyHo6ZiekI",
+  "tags": []
+}
