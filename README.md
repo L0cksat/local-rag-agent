@@ -17,11 +17,12 @@ Rather than building a generic wrapper around OpenAI's API, I engineered a self-
 
 ## Live Demonstration
 
-[**► Watch the 60-second architecture & execution demo here**](LINK_A_TU_VIDEO_AQUI)
+[**► Watch the 60-second architecture & execution demo here**](https://github.com/user-attachments/assets/bebb8eea-9999-495a-ade7-593465905899)
 
 *The demo shows the Telegram interface interacting with the AI agent, running in parallel with the n8n execution canvas highlighting the real-time tool querying and vector retrieval.*
 
 ## Screenshot
+<img width="1672" height="833" alt="n8n-erasia-telegram-bot" src="https://github.com/user-attachments/assets/193da6cd-c56f-4d31-924d-035bf4c5e131" />
 
 
 ## Architecture & Workflow
